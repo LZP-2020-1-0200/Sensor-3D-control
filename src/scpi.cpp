@@ -49,9 +49,9 @@ Command cmd_list[] = {
 
     Command("HELP", HELP_func), //
     Command([](const char *a) { // error function must be last!
-        Serial.print("ERROR: UNKNOWN COMMAND");
+        Serial.print("ERROR: UNKNOWN COMMAND ");
         Serial.print(a);
-        Serial.print("ERROR: UNKNOWN COMMAND" TX_EOL);
+        Serial.print(TX_EOL);
     })};
 void HELP_func(const char *args)
 {

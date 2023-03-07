@@ -6,7 +6,7 @@ void Led::init(const uint8_t &ledpin)
 {
     led_pin = ledpin;
     pinMode(led_pin, OUTPUT);
-    digitalWrite(led_pin, led_state);
+    digitalWrite(led_pin, led_state ^ active_low);
 }
 void Led::write_status(void)
 {
@@ -22,15 +22,15 @@ void Led::update(const char *arg)
         if (0 == strncasecmp(arg, on_str, on_len))
         {
             led_state = 0;
-            digitalWrite(led_pin, led_state);
+            digitalWrite(led_pin, led_state ^ active_low);
         }
-        else if(0 == strncasecmp(arg, off_str, off_len))
+        else if (0 == strncasecmp(arg, off_str, off_len))
         {
             led_state = 1;
-            digitalWrite(led_pin, led_state);
+            digitalWrite(led_pin, led_state ^ active_low);
         }
         else
-        Serial.write("ERROR: invalid LED argument" TX_EOL);
+            Serial.write("ERROR: invalid LED argument" TX_EOL);
     }
     else
     {

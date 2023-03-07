@@ -8,6 +8,7 @@ class Led
 private:
     /* data */
     uint8_t led_state = 1;
+    uint8_t active_low = 1;
     uint8_t led_pin = LED_BUILTIN;
     void write_status(void);
 
