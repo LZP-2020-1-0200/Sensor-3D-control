@@ -39,7 +39,7 @@ public:
     stepper_direction_t get_direction(void) const { return direction; }
 
     uint32_t get_step_delay_usec(void) const { return step_delay_usec; }
-    void set_step_delay_usec(const uint32_t &usec);
+    void delay(const char *a);
 };
 
 extern Stepper stepper;

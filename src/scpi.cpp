@@ -2,7 +2,7 @@
 #include <Arduino.h>
 #include <string.h>
 #include "led.h"
-
+#include "stepper.h"
 SCPI scpi;
 
 void SCPI::addChar(char ch)
@@ -41,11 +41,15 @@ Command::Command(void (*ptr_func)(const char *)) //
 void HELP_func(const char *); // implementation requires cmd_list, see below
 
 Command cmd_list[] = {
-    //command-function pairs
+    // command-function pairs
     Command("*IDN?", [](const char *a)
             { Serial.print("SCPI demo" TX_EOL); }),
     Command("LED", [](const char *a)
             { led.update(a); }),
+    Command("STEP:DELAY", [](const char *a)
+            { stepper.delay(a); }),
+    Command("STEP:INIT", [](const char *a)
+            { stepper.init(); }),
 
     Command("HELP", HELP_func), //
     Command([](const char *a) { // error function must be last!
@@ -78,7 +82,7 @@ void SCPI::parse(char *cmd, const int len)
                 { // step over empty spaces between command and arguments
                     argument++;
                 }
-                cl->func(argument); //call the known function
+                cl->func(argument); // call the known function
                 return;
             }
             cmd_num++;
