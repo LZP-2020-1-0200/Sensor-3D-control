@@ -1,0 +1,28 @@
+﻿Pin_Nr DB25;Amel_nr;Arduino_nr;funkcija;IN/OUT;;
+1;;;X motors, +5V;;;IN - uz kontrolieri
+14;PB4;IO8;X motors, zi, 2. kontakts;OUT;;OUT - uz motoru
+2;PB1;SCK;X motors, A, 3. kontakts;IN;;
+15;PB5;IO9;X motors, dz, 4. kontakts;OUT;;
+3;PB2;MOSI;X motors, B, 5. kontakts;IN;;
+16;PB6;IO10;X motors, or, 6. kontakts;OUT;;
+4;;;X motors, GND;;;
+17;PB7;IO11;X motors, roz, 8. kontakts;OUT;;
+5;;;Y motors, +5V;;;
+18;PD0;D3;Y motors, zi, 2. kontakts;OUT;;
+6;PD3;D1;Y motors, A, 3. kontakts;IN;;
+19;PD1;D2;Y motors, dz, 4. kontakts;OUT;;
+7;E6;D7;Y motors, B, 5. kontakts;IN;;
+20;PD4;D4;Y motors, or, 6. kontakts;OUT;;
+8;;;Y motors, GND, 7. kontakts;;;
+21;PD7;D6;Y motors, roz, 8. kontakts;OUT;;
+9;;;Z motors, +5V;;;
+22;PF4;A3;Z motors, zi, 2. kontakts;OUT;;
+10;PF0;A5;Z motors, A, 3. kontakts;IN;;
+23;PF5;A2;Z motors, dz, 4. kontakts;OUT;;
+11;PF1;A4;Z motors, B, 5. kontakts;IN;;
+24;PF6;A1;Z motors, or, 6. kontakts;OUT;;
+12;;;Z motors, GND;;;
+25;PF7;A0;Z motors, roz, 8. kontakts;OUT;;
+13;;;GND;;;
+;;;;;;
+;;arduino shield;;;;
