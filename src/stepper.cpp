@@ -1,7 +1,7 @@
 #include "stepper.h"
 #include <avr/interrupt.h>
 
-Stepper stepper;
+Stepper* Stepper::motors[STEPPER_COUNT];
 
 const uint8_t stepper1_pins = (1 << DDB4) | (1 << DDB5) | (1 << DDB6) | (1 << DDB7);
 const uint8_t stepper1_mask = ~stepper1_pins;
@@ -9,9 +9,6 @@ const uint8_t stepper1_mask = ~stepper1_pins;
 void Stepper::init(void)
 {
     cli();
-
-    DDRB |= stepper1_pins;
-
     TCCR3A = 0;
 
     const uint16_t OneKHz = 1999; // 16000000/8/1000-1
@@ -24,23 +21,44 @@ void Stepper::init(void)
     sei();
 }
 
-static volatile uint16_t millisecond_counter = 0;
-static volatile uint16_t delay_milliseconds = 5;
 
-const uint8_t sequence[] = {(1 << DDB4), (1 << DDB5), (1 << DDB6), (1 << DDB7)};
+const uint8_t sequence[] = //{(1 << DDB4), (1 << DDB5), (1 << DDB6), (1 << DDB7)};
+{
+    0b1100,
+    0b0110,
+    0b0011,
+    0b1001
+};
 
-volatile int xpos = 0;
-volatile int direction = 1;
 
 ISR(TIMER3_COMPA_vect)
 {
+    for(int i=0;i<STEPPER_COUNT;i++){
+        Stepper::motors[i]->move();
+    }
+}
+void Stepper::set_direction(stepper_direction_t dir) { 
+    if(direction!=0 && dir!=0)direction_change_timer=direction_change_steps;
+    direction = dir; 
+}
+void inline Stepper::move(){
+    if(direction_change_timer>0){
+        direction_change_timer--;
+        return;
+    }
+    int delta=targetPos-position;
+    direction=(delta>0?STEPPER_UP:(delta<0?STEPPER_DOWN:STEPPER_PAUSE));
+    if(direction==0)return;
     if (++millisecond_counter >= delay_milliseconds)
     {
-        volatile uint8_t stepper_1_bits = 0;//PORTB & stepper1_mask;
-        xpos += direction;
-        stepper_1_bits |= sequence[xpos & 0x03];
-
-        PORTB = stepper_1_bits; // mirgo
+        uint8_t seqN=position&3;
+        volatile uint8_t stepper_1_bits = *port & stepper1_mask;// clear all motor bits
+        position += direction;// update position
+        for(int i=0;i<4;i++){
+            stepper_1_bits|= (0b1&(sequence[seqN]>>i))<<stepperPins[i];
+        }
+        
+        (*port) = stepper_1_bits; // turn on pins
         millisecond_counter = 0;
     }
 }
@@ -48,4 +66,14 @@ ISR(TIMER3_COMPA_vect)
 void Stepper::delay(const char *a)
 {
     delay_milliseconds = (uint16_t)atoi(a);
+}
+void Stepper::lock(bool x){
+    volatile uint8_t stepper_1_bits = *port & stepper1_mask;// clear all motor bits
+    if(x){
+        uint8_t seqN=position&3;
+        for(int i=0;i<4;i++){
+            stepper_1_bits|= (0b1&(sequence[seqN]>>i))<<stepperPins[i];
+        }
+    }
+    (*port) = stepper_1_bits; // turn on pins
 }
