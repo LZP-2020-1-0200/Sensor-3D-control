@@ -14,8 +14,12 @@ void scipi2::update(){
             input[inBufIndex]='\0';
             if(inBufIndex!=0)cmd.parse(serial, input);
             inBufIndex=0;
-        }else if(c=='\b'){
-            if(inBufIndex>0) inBufIndex--;
+        // handle delete chars/backspaces
+        }else if(c == '\b' || c == 127){
+            if(inBufIndex>0) {
+                inBufIndex--;
+            }
+            input[inBufIndex] = ' ';
         }else{
             input[inBufIndex] = c;
             inBufIndex++;
@@ -42,20 +46,25 @@ int Command::cmdInd(char* command, int c){
 }
 
 void Command::parse(HardwareSerial& serial, char* line){
+    //iterate up to seperator
     for(int i=0;line[i]!='\0';i++){
         //sub cmd
         if(line[i]==':'){
+            // check if parent command exists
             int ind = cmdInd(line, i);
             if(ind==-1){
                 serial.write("Command \"");
                 serial.write(line, i);
-                serial.write("\" not found.\n");
+                serial.write("\" not found.\r\n");
                 return;
             }
+            //parse subcommand
             subcommands[ind].cmd->parse(serial, line+i+1);
             return;
         }
+        // parameters
         else if(line[i]==' '){
+            //check if command exists
             int ind = cmdInd(line, i);
             if(ind==-1){
                 serial.write("Command \"");
@@ -70,7 +79,7 @@ void Command::parse(HardwareSerial& serial, char* line){
             i++;
             bool start=false;
             argv[argc]=line+i;
-
+            //parse arguments
             do
             {
                 if(!start){
@@ -96,7 +105,9 @@ void Command::parse(HardwareSerial& serial, char* line){
             }
             subcommands[ind].cmd->func(argc, argv);
             return;
-        }else if(line[i]=='?'){
+        }
+        // get command
+        else if(line[i]=='?'){
             int ind = cmdInd(line, i);
             if(ind==-1){
                 serial.write("Command \"");
