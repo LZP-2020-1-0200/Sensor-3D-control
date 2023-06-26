@@ -1,79 +1,83 @@
 #include "stepper.h"
-#include <avr/interrupt.h>
 
-Stepper* Stepper::motors[STEPPER_COUNT];
-
-const uint8_t stepper1_pins = (1 << DDB4) | (1 << DDB5) | (1 << DDB6) | (1 << DDB7);
-const uint8_t stepper1_mask = ~stepper1_pins;
-
-void Stepper::init(void)
-{
-    cli();
-    TCCR3A = 0;
-
-    const uint16_t OneKHz = 1999; // 16000000/8/1000-1
-    OCR3A = OneKHz;               // skait. slieksnis
-
-    TCCR3B = (1 << WGM32) | // CTC mode
-             (1 << CS31);   // prescaler 1/8
-
-    TIMSK3 |= 1 << OCIE3A; // pārtr. maska
-    sei();
-}
-
-
-const uint8_t sequence[] = //{(1 << DDB4), (1 << DDB5), (1 << DDB6), (1 << DDB7)};
+// constrain to this file
+static const uint8_t sequence[] = //{(1 << DDB4), (1 << DDB5), (1 << DDB6), (1 << DDB7)};
 {
     0b1100,
+    0b0100,
     0b0110,
+    0b0010,
     0b0011,
+    0b0001,
     0b1001
 };
 
+Stepper::motorData::motorData(
+    volatile uint8_t* port,
+    volatile uint8_t* dataDirRegister,
+    int pin1, int pin2, int pin3, int pin4)
+    : port(port),
+      dataDirRegister(dataDirRegister),
+      pins{pin1, pin2, pin3, pin4} {
+    
+};
 
-ISR(TIMER3_COMPA_vect)
-{
-    for(int i=0;i<STEPPER_COUNT;i++){
-        Stepper::motors[i]->move();
-    }
-}
-void Stepper::set_direction(stepper_direction_t dir) { 
-    if(direction!=0 && dir!=0)direction_change_timer=direction_change_steps;
-    direction = dir; 
-}
-void inline Stepper::move(){
-    if(direction_change_timer>0){
-        direction_change_timer--;
-        return;
-    }
-    int delta=targetPos-position;
-    direction=(delta>0?STEPPER_UP:(delta<0?STEPPER_DOWN:STEPPER_PAUSE));
-    if(direction==0)return;
-    if (++millisecond_counter >= delay_milliseconds)
-    {
-        uint8_t seqN=position&3;
-        volatile uint8_t stepper_1_bits = *port & stepper1_mask;// clear all motor bits
-        position += direction;// update position
-        for(int i=0;i<4;i++){
-            stepper_1_bits|= (0b1&(sequence[seqN]>>i))<<stepperPins[i];
-        }
-        
-        (*port) = stepper_1_bits; // turn on pins
-        millisecond_counter = 0;
-    }
+Stepper::Stepper(motorData motor)
+    : motor(motor),
+      motor_pins(
+        (1<<motor.pins[0]) |
+        (1<<motor.pins[1]) |
+        (1<<motor.pins[2]) |
+        (1<<motor.pins[3])
+        ), motor_mask(~motor_pins) {
+    cli();
+    //set motor pins as outputs
+    *(motor.dataDirRegister) |= motor_pins;
+    sei();
+};
+
+void Stepper::unlock(void){
+    *(motor.port) &= motor_mask;
 }
 
-void Stepper::delay(const char *a)
-{
-    delay_milliseconds = (uint16_t)atoi(a);
-}
-void Stepper::lock(bool x){
-    volatile uint8_t stepper_1_bits = *port & stepper1_mask;// clear all motor bits
-    if(x){
-        uint8_t seqN=position&3;
-        for(int i=0;i<4;i++){
-            stepper_1_bits|= (0b1&(sequence[seqN]>>i))<<stepperPins[i];
-        }
+void Stepper::lock(void){
+    volatile uint8_t stepper_bits = *(motor.port) & motor_mask;// clear all motor bits
+    uint8_t seqN = (position + offset) & 7;
+    for(int i=0;i<4;i++){
+        stepper_bits|= (0b1&(sequence[seqN]>>i))<<motor.pins[i];
     }
-    (*port) = stepper_1_bits; // turn on pins
+    *(motor.port) = stepper_bits;
 }
+
+void Stepper::forward(void) {
+    position++;
+    lock();
+}
+
+void Stepper::backward(void){
+    position--;
+    lock();
+}
+
+int Stepper::getPosition(void){
+    return position;
+}
+
+void Stepper::resetPosition(void){
+    offset = (position + offset) & 7;
+    position = 0;
+}
+
+#define STEPPER_SETUP(port, pin1, pin2, pin3, pin4) \
+    &PORT ## port,\
+    &DDR ## port,\
+    DD ## port ## pin1,\
+    DD ## port ## pin2,\
+    DD ## port ## pin3,\
+    DD ## port ## pin4
+    
+Stepper Stepper::yStepper{motorData{STEPPER_SETUP(D,0,4,1,7)}};
+
+Stepper Stepper::xStepper{motorData{STEPPER_SETUP(B,4,6,5,7)}};
+
+Stepper Stepper::zStepper{motorData{STEPPER_SETUP(F,4,6,5,7)}};
