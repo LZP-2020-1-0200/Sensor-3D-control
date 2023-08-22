@@ -26,7 +26,7 @@ void scipi2::update(){
         }
         if(inBufIndex>SCIPI_BUFFER_SIZE){
             inBufIndex=0;
-            serial.write("Command too long\n");
+            serial.write("Command too long\r\n");
             //read all available data to empty buffer
             while (serial.available())
             {
@@ -69,7 +69,7 @@ void Command::parse(HardwareSerial& serial, char* line){
             if(ind==-1){
                 serial.write("Command \"");
                 serial.write(line, i);
-                serial.write("\" not found.\n");
+                serial.write("\" not found.\r\n");
                 return;
             }
             char* argv[SCIPI_MAX_ARGC];
@@ -90,7 +90,7 @@ void Command::parse(HardwareSerial& serial, char* line){
                         argc++;
                         start=false;
                         if(argc==SCIPI_MAX_ARGC){
-                            serial.write("Too many arguments.\n");
+                            serial.write("Too many arguments.\r\n");
                             return;
                         }
                         argv[argc]=line+i+1;
@@ -100,7 +100,7 @@ void Command::parse(HardwareSerial& serial, char* line){
             }while (line[i]!='\0');
             argc++;
             if(subcommands[ind].cmd->func==nullptr){
-                serial.write("Call cmd not supported. Did you mean to add '?'?\n");
+                serial.write("Call cmd not supported. Did you mean to add '?'?\r\n");
                 return;
             }
             subcommands[ind].cmd->func(argc, argv);
@@ -112,7 +112,7 @@ void Command::parse(HardwareSerial& serial, char* line){
             if(ind==-1){
                 serial.write("Command \"");
                 serial.write(line);
-                serial.write("\" not found.\n");
+                serial.write("\" not found.\r\n");
                 return;
             }
             subcommands[ind].cmd->get();
@@ -124,7 +124,7 @@ void Command::parse(HardwareSerial& serial, char* line){
     if(ind==-1){
         serial.write("Command \"");
         serial.write(line);
-        serial.write("\" not found.\n");
+        serial.write("\" not found.\r\n");
         return;
     }
     subcommands[ind].cmd->func(1, &line);
