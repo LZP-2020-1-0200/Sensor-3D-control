@@ -1,4 +1,5 @@
 #include "stepper.h"
+#include "endSwitch.h"
 
 class StepperController
 {
@@ -14,7 +15,8 @@ public:
     enum class mode{
         target,
         homing,
-        idle
+        idle,
+        disabled
     };
 private:
     // which way is it currently going

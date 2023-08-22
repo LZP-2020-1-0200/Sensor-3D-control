@@ -16,17 +16,6 @@ int StepperController::get_position(void) {
     return motor.getPosition();
 }
 
-/*
-void StepperController::set_direction(direction_t dir) { 
-    // if the stepper is going the opposite way stop and engage timer
-    if (direction != direction_t::STEPPER_PAUSE && dir != direction_t::STEPPER_PAUSE){
-        if(direction != dir)
-        direction_change_timer = direction_change_delay;
-    }
-    direction = dir; 
-}
-*/
-
 void StepperController::updateTimers(){
     if(direction_change_timer > 0) direction_change_timer--;
     if(millisecond_counter>step_delay_milliseconds){
@@ -71,13 +60,12 @@ void StepperController::tick(){
         }
     }
     else if(currentMode == mode::homing) {
-        
         if(homingMove()) {
             currentMode = mode::idle;
             Serial.write("homed.\r\n");
         }
-    }else {
-        //Serial.write("done.\n");
+    }else if(currentMode == mode::idle || currentMode == mode::disabled) {
+        
     }
 }
 
@@ -88,17 +76,8 @@ bool StepperController::homingMove(){
     Serial.write("\n");
     switch (homingState)
     {
-        
-
-        case 0:
-        /*if(!end.getState() && homingOvershootCounter<1000*step_delay_milliseconds){
-            homingOvershootCounter++;
-            direction = direction_t::STEPPER_UP;
-            return false;
-        }*/
-        homingState++;
         // move off of limit switch
-        case 1:
+        case 0:
         if (start.getState()) {
             direction = direction_t::STEPPER_UP;
             return false;
@@ -106,7 +85,8 @@ bool StepperController::homingMove(){
         homingOvershootCounter = 0;
         homingState++;
 
-        case 2:
+        // overshoot
+        case 1:
         if(homingOvershootCounter<1000*step_delay_milliseconds){
             homingOvershootCounter++;
             direction = direction_t::STEPPER_UP;
@@ -115,7 +95,7 @@ bool StepperController::homingMove(){
         homingState++;
 
         // approach switch
-        case 3:
+        case 2:
         if (!start.getState()) {
             direction = direction_t::STEPPER_DOWN;
             return false;
@@ -123,7 +103,8 @@ bool StepperController::homingMove(){
         homingOvershootCounter = 0;
         homingState++;
 
-        case 4:
+        //small overshoot
+        case 3:
         if(homingOvershootCounter<50*step_delay_milliseconds){
             homingOvershootCounter++;
             direction = direction_t::STEPPER_DOWN;
@@ -135,7 +116,7 @@ bool StepperController::homingMove(){
         // of the screw releasing pressure on the switch
 
         // count up wiggle steps
-        case 5:
+        case 4:
         if (start.getState()) {
             direction = direction_t::STEPPER_UP;
             fWiggle++;
@@ -144,7 +125,8 @@ bool StepperController::homingMove(){
         homingOvershootCounter = 0;
         homingState++;
 
-        case 6:
+        // overshoot
+        case 5:
         if(homingOvershootCounter<50*step_delay_milliseconds){
             homingOvershootCounter++;
             direction = direction_t::STEPPER_UP;
@@ -154,7 +136,7 @@ bool StepperController::homingMove(){
 
 
         // return to switch to set (0,0) and count down wiggle steps
-        case 7:
+        case 6:
         if (!start.getState()) {
             direction = direction_t::STEPPER_DOWN;
             bWiggle++;
