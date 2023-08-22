@@ -120,9 +120,9 @@ void setup()
   //zMotor.setMode(StepperController::mode::homing);
 }
 
-
 void loop()
 {
   inputHandler.update();
 }
+
 #endif
