@@ -12,7 +12,7 @@ StepperController::~StepperController(){
 
 }
 
-int StepperController::get_position(void) {
+int StepperController::get_position(void) const {
     return motor.getPosition();
 }
 
@@ -226,6 +226,22 @@ bool StepperController::setDelay(const char *a)
     }
     step_delay_milliseconds = (uint16_t)atoi(a);
     return true;
+}
+
+void StepperController::Enable() {
+    currentMode = mode::idle;
+    direction = direction_t::STEPPER_PAUSE;
+    motor.lock();
+}
+
+void StepperController::Disable() {
+    currentMode = mode::disabled;
+    direction = direction_t::STEPPER_DISABLED;
+    motor.unlock();
+}
+
+bool StepperController::isEnabled(void) const {
+    return currentMode != mode::disabled;
 }
 
 StepperController StepperController::xMotor(

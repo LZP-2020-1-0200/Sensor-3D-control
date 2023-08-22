@@ -59,7 +59,7 @@ void Stepper::backward(void){
     lock();
 }
 
-int Stepper::getPosition(void){
+int Stepper::getPosition(void) const {
     return position;
 }
 
@@ -67,6 +67,7 @@ void Stepper::resetPosition(void){
     offset = (position + offset) & 7;
     position = 0;
 }
+
 
 #define STEPPER_SETUP(port, pin1, pin2, pin3, pin4) \
     &PORT ## port,\

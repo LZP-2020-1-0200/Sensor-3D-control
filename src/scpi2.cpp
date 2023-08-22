@@ -1,12 +1,16 @@
-#include <scipi2.h>
+#include "scpi2.h"
 
-namespace scipi
+namespace scpi
 {
-scipi2::~scipi2()
+    
+const char* RECIEVED_RESPONSE = "R\r\n";
+const char* ERROR_RESPONSE = "E\r\n";
+
+scpi2::~scpi2()
 {
 }
 
-void scipi2::update(){
+void scpi2::update(){
     while (serial.available())
     {
         char c = serial.read();
@@ -37,7 +41,7 @@ void scipi2::update(){
 }
 
 int Command::cmdInd(char* command, int c){
-    for(int i=0;i<childCMDCount;i++){
+    for(size_t i=0 ; i<childCMDCount ; i++){
         if(strncasecmp(subcommands[i].txt, command, c)==0){
             return i;
         }
@@ -131,4 +135,4 @@ void Command::parse(HardwareSerial& serial, char* line){
     return;
 }
 
-} // namespace scipi
+} // namespace scpi

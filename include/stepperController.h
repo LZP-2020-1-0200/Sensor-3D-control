@@ -49,19 +49,38 @@ public:
     
     // How long to wait if the stepper has to swap directions
     unsigned int direction_change_delay=0;
-    bool pause_lock = true;
+    
     StepperController(Stepper&, endSwitch&, endSwitch&);
     ~StepperController();
     static StepperController* motors[STEPPER_COUNT];
 
-    int get_position(void);
+    int get_position(void) const;
+
     direction_t get_direction(void) const { return direction; }
+    
     void tick();
     // uint32_t get_step_delay_usec(void) const { return step_delay_usec; }
     bool setDelay(const char *a);
-    // void lock(bool x);
+
+    // Set the target position for the stepper to go to
+    // Enables the stepper if it is disabled
     void setTarget(int);
+
+    /** 
+     * Move the stepper downward to find the end switch and recalibrate
+     * internal position
+     *
+     * Enables the stepper if it is disabled
+     */
     void home(void);
+
+    // Unlocks the stepper for power saving
+    void Disable(void);
+
+    // Locks the stepper
+    void Enable(void);
+
+    bool isEnabled(void) const;
 private:
     // Target position that the stepper should go to
     enum Tstate{

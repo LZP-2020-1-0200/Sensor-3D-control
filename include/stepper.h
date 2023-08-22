@@ -29,12 +29,6 @@ public:
         motorData( volatile uint8_t*,  volatile uint8_t*, int, int, int, int);
     };
 
-    enum class mode{
-        UP,
-        DOWN,
-        STOP,
-        DISABLED
-    };
 
 private:
     motorData motor;
@@ -57,10 +51,11 @@ public:
     void backward(void);
 
     //* retrieves position
-    int getPosition(void);
+    int getPosition(void) const;
 
     //* resets position to 0
     void resetPosition(void);
+
 
     static Stepper xStepper;
     static Stepper yStepper;
