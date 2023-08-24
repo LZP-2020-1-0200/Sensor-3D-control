@@ -68,6 +68,13 @@ void Stepper::resetPosition(void){
     position = 0;
 }
 
+void Stepper::reset(void){
+    resetPosition();
+    unlock();
+    offset = 0;
+    position = 0;
+}
+
 
 #define STEPPER_SETUP(port, pin1, pin2, pin3, pin4) \
     &PORT ## port,\

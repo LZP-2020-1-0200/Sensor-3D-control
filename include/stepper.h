@@ -56,6 +56,8 @@ public:
     //* resets position to 0
     void resetPosition(void);
 
+    //* resets the stepper
+    void reset(void);
 
     static Stepper xStepper;
     static Stepper yStepper;
