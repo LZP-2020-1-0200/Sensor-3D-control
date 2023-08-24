@@ -8,6 +8,8 @@ extern StepperController& yMotor;
 extern StepperController& zMotor;
 
 extern scpi::Command motorLockCMD;
+extern scpi::Command motorStateCMD;
+extern scpi::Command motorEndCMD;
 
 int motorFunc(int argc, char** argv) {
 	if(argc==2){
@@ -31,22 +33,22 @@ int motorFunc(int argc, char** argv) {
 } 
 
 void motorGet() {
-	char buff[32];
-    itoa(xMotor.get_position(), buff, 10);
-    Serial1.write(buff);
-    Serial1.write(" ");
-    itoa(yMotor.get_position(), buff, 10);
-    Serial1.write(buff);
-    Serial1.write(" ");
-    itoa(zMotor.get_position(), buff, 10);
-    Serial1.write(buff);
-    Serial1.write("\r\n");
+	Serial1.print(xMotor.get_position(), DEC);
+	Serial1.print(" ");
+	Serial1.print(yMotor.get_position(), DEC);
+	Serial1.print(" ");
+	Serial1.print(zMotor.get_position(), DEC);
+	Serial1.print("\r\n");
 }
+
+const scpi::Command::ChildCMD motorChildCMDs[] = {
+	{"LOCK", &motorLockCMD},
+	{"STATE", &motorStateCMD},
+	{"END", &motorEndCMD}
+};
 
 scpi::Command motorCMD{
 	motorFunc,
 	motorGet,
-	{
-		{"LOCK", &motorLockCMD}
-	}
+	motorChildCMDs
 };

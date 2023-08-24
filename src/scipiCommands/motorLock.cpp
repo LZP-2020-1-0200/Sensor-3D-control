@@ -52,25 +52,24 @@ int motorLockFunc(int argc, char** argv) {
 }
 
 void motorLockGet() {
-	char buff[32];
 	if(xMotor.isEnabled()){
-		Serial1.write("ON");
+		Serial1.print("ON");
 	}else{
-		Serial1.write("OFF");
+		Serial1.print("OFF");
 	}
-	Serial1.write(" ");
+	Serial1.print(" ");
 	if(yMotor.isEnabled()){
-		Serial1.write("ON");
+		Serial1.print("ON");
 	}else{
-		Serial1.write("OFF");
+		Serial1.print("OFF");
 	}
-	Serial1.write(" ");
+	Serial1.print(" ");
 	if(zMotor.isEnabled()){
-		Serial1.write("ON");
+		Serial1.print("ON");
 	}else{
-		Serial1.write("OFF");
+		Serial1.print("OFF");
 	}
-	Serial1.write("\r\n");
+	Serial1.print("\r\n");
 }
 
 scpi::Command motorLockCMD{
