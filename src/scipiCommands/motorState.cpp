@@ -6,6 +6,8 @@ extern StepperController& xMotor;
 extern StepperController& yMotor;
 extern StepperController& zMotor;
 
+extern scpi::Command motorStateDefaultCMD;
+
 int modeToInt(StepperController::mode m) {
 	if(m==StepperController::mode::disabled) {
 		return 0;
@@ -30,7 +32,12 @@ void motorStateGet() {
 	Serial1.print("\r\n");
 }
 
+scpi::Command::ChildCMD motorStateChildCMDs[] = {
+	{"DEFAULT", &motorStateDefaultCMD}
+};
+
 scpi::Command motorStateCMD{
 	nullptr,
-	motorStateGet
+	motorStateGet,
+	motorStateChildCMDs
 };
