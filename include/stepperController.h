@@ -20,9 +20,9 @@ public:
     };
 private:
     // which way is it currently going
-    direction_t direction=direction_t::STEPPER_PAUSE;
+    direction_t direction=direction_t::STEPPER_DISABLED;
 
-    mode currentMode=mode::target;
+    mode currentMode=mode::disabled;
     mode defaultMode=mode::disabled;
 
     // uint32_t prev_usec;

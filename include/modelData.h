@@ -4,7 +4,7 @@
 #endif
 #ifndef MODEL
 // Mirorless assembly for microscopic imaging
-#define MODEL "MAMI"
+#define MODEL "Mirrorless Assembly for Microscopic Imaging (MAMI)"
 #endif
 #ifndef SERIAL_NUMBER
 #define SERIAL_NUMBER "0001"
