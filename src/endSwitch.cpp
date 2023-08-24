@@ -40,6 +40,10 @@ void switchUpdate(){
 	endSwitch::Xhigh.update();
 }
 
+void endSwitch::reset(){
+	triggered=false;
+}
+
 //* fills out the correct pins and registers for endswitches
 #define SWITCH_SETUP(port, pin) \
   &PORT ## port,\

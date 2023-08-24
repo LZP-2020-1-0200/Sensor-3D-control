@@ -29,6 +29,9 @@ public:
 	//* returns last known switch state
 	bool getState();
 
+	//* resets the switch
+	void reset();
+
 	static endSwitch Zlow;
 	static endSwitch Zhigh;
 	static endSwitch Ylow;
