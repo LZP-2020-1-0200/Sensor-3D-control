@@ -31,6 +31,8 @@ void setup()
   zMotor.setDelay("200");
   //zMotor.setTarget(30000);
   delay(3000);
+  Serial.print("Initialized\r\n");
+  baseCMD.dump();
   //zMotor.setMode(StepperController::mode::homing);
 }
 
