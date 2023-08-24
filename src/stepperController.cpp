@@ -55,25 +55,26 @@ void StepperController::tick(){
     //updateStepper();
     if(currentMode == mode::target) {
         if(targetedMove()){
-            currentMode = mode::idle;
-            Serial.write("reached.\r\n");
+            currentMode = defaultMode;
+            Serial.print("reached.\r\n");
         }
-    }
-    else if(currentMode == mode::homing) {
+    } else if(currentMode == mode::homing) {
         if(homingMove()) {
-            currentMode = mode::idle;
-            Serial.write("homed.\r\n");
+            currentMode = defaultMode;
+            Serial.print("homed.\r\n");
         }
-    }else if(currentMode == mode::idle || currentMode == mode::disabled) {
-        
+    } else if(currentMode == mode::idle) {
+        direction = direction_t::STEPPER_PAUSE;
+    } else if(currentMode == mode::disabled) {
+        direction = direction_t::STEPPER_DISABLED;
     }
 }
 
 // this is essentially a state machine with the advantage
 // of transitions happening on the same iteration
 bool StepperController::homingMove(){
-    Serial.write('0'+homingState);
-    Serial.write("\n");
+    Serial.print(homingState, DEC);
+    Serial.print("\n");
     switch (homingState)
     {
         // move off of limit switch
@@ -147,12 +148,11 @@ bool StepperController::homingMove(){
         motor.resetPosition();
         direction = direction_t::STEPPER_PAUSE;
         homingState++;
-        char x[20];
-        itoa(bWiggle/step_delay_milliseconds, x, 10);
-        Serial.write(x);
-        Serial.write('\n');
-        itoa(fWiggle/step_delay_milliseconds, x, 10);
-        Serial.write(x);
+        Serial.print("bWiggle: ");
+        Serial.print(bWiggle/step_delay_milliseconds, DEC);
+        Serial.print("\r\n");
+        Serial.print("fWiggle: ");
+        Serial.print(fWiggle/step_delay_milliseconds, DEC);
         
     }
     return true;
@@ -163,7 +163,7 @@ bool StepperController::targetedMove(){
     switch (targetState)
     {
         case T_START:
-        Serial.write("start\r\n");
+        Serial.print("start\r\n");
         if (motor.getPosition() > targetPos) {
             targetState = T_APPROACH;
             targetedMove();
@@ -242,6 +242,24 @@ void StepperController::Disable() {
 
 bool StepperController::isEnabled(void) const {
     return currentMode != mode::disabled;
+}
+
+void StepperController::reset(void) {
+    currentMode = mode::disabled;
+    direction_change_delay = 0;
+    direction = direction_t::STEPPER_DISABLED;
+    motor.reset();
+    targetState = T_START;
+    homingState = 0;
+    homingOvershootCounter = 0;
+    wiggle = 0;
+    fWiggle = 0;
+    bWiggle = 0;
+    targetPos = 0;
+    step_delay_milliseconds = 0;
+    motor.unlock();
+    end.reset();
+    start.reset();
 }
 
 StepperController StepperController::xMotor(

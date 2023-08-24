@@ -23,6 +23,7 @@ private:
     direction_t direction=direction_t::STEPPER_PAUSE;
 
     mode currentMode=mode::target;
+    mode defaultMode=mode::disabled;
 
     // uint32_t prev_usec;
     // uint32_t step_delay_usec;
@@ -81,6 +82,25 @@ public:
     void Enable(void);
 
     bool isEnabled(void) const;
+    
+    // Make a complete reset of the stepper and switches
+    void reset(void);
+
+    // Get current mode of the stepper
+    mode getMode(void) const { return currentMode; }
+
+    // Get default mode for the stepper
+    mode getDefaultMode(void) const { return defaultMode; }
+
+    // Set default mode for the stepper
+    inline void setDefaultMode(mode m) { defaultMode = m; }
+
+    // Get start switch state
+    bool getStartSwitch(void) const { return start.getState(); }
+
+    // Get end switch state
+    bool getEndSwitch(void) const { return end.getState(); }
+
 private:
     // Target position that the stepper should go to
     enum Tstate{
@@ -102,6 +122,7 @@ private:
     void updateStepper();
     void updateTimers();
     direction_t deltaToDirection(int delta);
+
 public:
     static StepperController xMotor;
     static StepperController yMotor;
