@@ -53,21 +53,21 @@ int motorLockFunc(int argc, char** argv) {
 
 void motorLockGet() {
 	if(xMotor.isEnabled()){
-		Serial1.print("ON");
+		Serial1.print("1");
 	}else{
-		Serial1.print("OFF");
+		Serial1.print("0");
 	}
 	Serial1.print(" ");
 	if(yMotor.isEnabled()){
-		Serial1.print("ON");
+		Serial1.print("1");
 	}else{
-		Serial1.print("OFF");
+		Serial1.print("0");
 	}
 	Serial1.print(" ");
 	if(zMotor.isEnabled()){
-		Serial1.print("ON");
+		Serial1.print("1");
 	}else{
-		Serial1.print("OFF");
+		Serial1.print("0");
 	}
 	Serial1.print("\r\n");
 }
