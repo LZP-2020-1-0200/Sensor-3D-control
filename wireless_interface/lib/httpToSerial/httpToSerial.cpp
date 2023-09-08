@@ -54,6 +54,9 @@ HttpToSerial::~HttpToSerial() {
 }
 
 void HttpToSerial::log(const String& message) {
+	auto file = LittleFS.open("/log.txt", "a");
+	file.print(message);
+	file.close();
 	if(logBuffer.length() > 1000) {
 		logBuffer = logBuffer.substring(500);
 	}
@@ -102,38 +105,52 @@ void HttpToSerial::start() {
 		if(!isAuthorized()) {
 			return;
 		}
-		server.send(200, "text/plain", logBuffer);
+		auto file = LittleFS.open("/log.txt", "r");
+		server.send(200, "text/plain", file);
+		file.close();
 		logBuffer.clear();
 	});
 	// Routes for passthrough commands
 	for(size_t j=0; j<routeCount; j++) {
-		PassthroughRoute& route = routes[j];
-		server.on(route.path, HTTP_GET, [this, &route]() {
+		const PassthroughRoute& route = routes[j];
+		const PassthroughRoute* const routePtr = &route;
+		log("Adding route " + String(route.path) + " " + String(route.command) + "\r\n");
+		server.on(route.path, HTTP_GET, [this, routePtr]() {
+			const PassthroughRoute& route = *routePtr;
+			log("Executing route " + String(route.path) + " " + String(route.command) + "\r\n");
 			if(!isAuthorized()) {
 				return;
 			}
+			log("HTTP request received\r\n");
+			log("Flushing serial buffer\r\n");
 			serial.print("\r\n");
 			serial.flush();
 			serial.readString();
-			
+
+			log("Sending main command\r\n");
+			String command = route.command;
 			// print command
 			serial.print(route.command);
 
 			// print parameters if any
 			auto routeParameters = route.parameters;
+
+			log("Sending " + String(route.parameterCount) + " parameters\r\n");
 			for(size_t i=0; i<route.parameterCount; i++) {
-				auto parameter = server.arg(routeParameters[i]);
-				serial.print(" ");
-				serial.print(parameter);
-				serial.print("\r\n");
-				serial.flush();
-				serial.readString();
+				log("Parameter " + String(routeParameters[i]) + "\r\n");
+				if(server.hasArg(String(routeParameters[i]))) {
+					log(String(routeParameters[i]) + ": " + server.arg(routeParameters[i]) + "\r\n");
+					serial.print(" ");
+					serial.print(server.arg(routeParameters[i]));
+					command+=" " + server.arg(routeParameters[i]);
+				}else {
+					log("Parameter " + String(routeParameters[i]) + " not found\r\n");
+				}
 			}
-			
-			
+			log("\r\n");
 			serial.print("\r\n");
 			serial.flush();
-			log(String(route.command) + " --> ");
+			log(command + " --> ");
 			String response = serial.readStringUntil('\r');
 			log(response + "\r\n");
 			server.send(200, "text/plain", response);

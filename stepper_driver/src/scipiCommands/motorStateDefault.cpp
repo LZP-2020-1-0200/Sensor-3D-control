@@ -15,6 +15,7 @@ int motorStateDefaultFunc(int argc, char** argv) {
 		xMotor.setDefaultMode(mode);
 		yMotor.setDefaultMode(mode);
 		zMotor.setDefaultMode(mode);
+		Serial1.print("OK\r\n");
 	} else {
 		return 1;
 	}

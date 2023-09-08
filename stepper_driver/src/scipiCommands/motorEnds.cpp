@@ -10,6 +10,7 @@ void motorPrintEnds(StepperController& motor) {
 	Serial1.print(motor.getStartSwitch(), DEC);
 	Serial1.print(" ");
 	Serial1.print(motor.getEndSwitch(), DEC);
+	Serial1.print("\r\n");
 }
 
 void motorEndXGet() {

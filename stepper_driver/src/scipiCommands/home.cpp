@@ -14,6 +14,7 @@ scpi::Command homeCMD{
     xMotor.home();
     yMotor.home();
     zMotor.home();
+    Serial1.print("OK\r\n");
     return 0;
   }
 };

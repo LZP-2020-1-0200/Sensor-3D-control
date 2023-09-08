@@ -12,8 +12,10 @@ static constexpr size_t arrSize(PassthroughRoute (&)[N]) {
     return N;
 }
 
+const char* motorParameters[] = {"motor", "coord"};
 PassthroughRoute routes[] = {
-    PassthroughRoute("/motorq", "motor?")
+    PassthroughRoute("/motorq", "motor?"),
+    std::move(*PassthroughRoute::makeRoute("/motor", "motor", motorParameters))
 };
 
 
@@ -70,6 +72,7 @@ void setup() {
     Serial.println(F("Setup ready"));
     Serial.flush();
     Serial.end();
+    Serial.setTimeout(3000);
     httpToSerial.start();
     Serial.swap();
 }

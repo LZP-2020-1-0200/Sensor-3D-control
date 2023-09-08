@@ -16,7 +16,8 @@ int motorFunc(int argc, char** argv) {
 		xMotor.setTarget(atoi(argv[1]));
 		yMotor.setTarget(atoi(argv[1]));
 		zMotor.setTarget(atoi(argv[1]));
-	return 0;
+		Serial1.print("OK\r\n");
+		return 0;
 	}else if(argc==3){
 		if(strcasecmp(argv[1], "X")==0){
 			xMotor.setTarget(atoi(argv[2]));
@@ -25,10 +26,13 @@ int motorFunc(int argc, char** argv) {
 		}else if(strcasecmp(argv[1], "Z")==0){
 			zMotor.setTarget(atoi(argv[2]));
 		} else {
+			Serial1.print("ERROR\r\n");
 			return 1;
 		}
+		Serial1.print("OK\r\n");
 		return 0;
 	}
+	Serial1.print("ERROR\r\n");
 	return 1;
 } 
 

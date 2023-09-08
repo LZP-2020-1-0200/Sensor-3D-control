@@ -160,10 +160,17 @@ bool StepperController::homingMove(){
 
 // updates the steppers
 bool StepperController::targetedMove(){
+    Serial.print("targetPos: ");
+    Serial.print(targetPos, DEC);
+    Serial.print("\r\n");
+    Serial.print("currentPos: ");
+    Serial.print(motor.getPosition(), DEC);
+    Serial.print("\r\n");
     switch (targetState)
     {
         case T_START:
         Serial.print("start\r\n");
+        
         if (motor.getPosition() > targetPos) {
             targetState = T_APPROACH;
             targetedMove();

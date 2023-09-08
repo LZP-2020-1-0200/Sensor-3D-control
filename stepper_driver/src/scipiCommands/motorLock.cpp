@@ -12,42 +12,51 @@ int motorLockFunc(int argc, char** argv) {
 		xMotor.Enable();
 		yMotor.Enable();
 		zMotor.Enable();
+		Serial1.print("OK\r\n");
 		return 0;
 	}else if(strcasecmp(argv[1], "OFF")==0){
 		xMotor.Disable();
 		yMotor.Disable();
 		zMotor.Disable();
+		Serial1.print("OK\r\n");
 		return 0;
 	}else{
 		return 1;
 	}
 	}else if(argc==3){
-	if(strcasecmp(argv[1], "X")==0){
-		if(strcasecmp(argv[2], "ON")==0){
-		xMotor.Enable();
-		return 0;
-		}else if(strcasecmp(argv[2], "OFF")==0){
-		xMotor.Disable();
-		return 0;
-		}
-	}else if(strcasecmp(argv[1], "Y")==0){
-		if(strcasecmp(argv[2], "ON")==0){
-		yMotor.Enable();
-		return 0;
-		}else if(strcasecmp(argv[2], "OFF")==0){
-		yMotor.Disable();
-		return 0;
-		}
-	}else if(strcasecmp(argv[1], "Z")==0){
-		if(strcasecmp(argv[2], "ON")==0){
-		zMotor.Enable();
-		return 0;
-		}else if(strcasecmp(argv[2], "OFF")==0){
-		zMotor.Disable();
-		return 0;
+		if(strcasecmp(argv[1], "X")==0){
+			if(strcasecmp(argv[2], "ON")==0){
+			xMotor.Enable();
+			Serial1.print("OK\r\n");
+			return 0;
+			}else if(strcasecmp(argv[2], "OFF")==0){
+			xMotor.Disable();
+			Serial1.print("OK\r\n");
+			return 0;
+			}
+		}else if(strcasecmp(argv[1], "Y")==0){
+			if(strcasecmp(argv[2], "ON")==0){
+			yMotor.Enable();
+			Serial1.print("OK\r\n");
+			return 0;
+			}else if(strcasecmp(argv[2], "OFF")==0){
+			yMotor.Disable();
+			Serial1.print("OK\r\n");
+			return 0;
+			}
+		}else if(strcasecmp(argv[1], "Z")==0){
+			if(strcasecmp(argv[2], "ON")==0){
+				zMotor.Enable();
+				Serial1.print("OK\r\n");
+				return 0;
+			}else if(strcasecmp(argv[2], "OFF")==0){
+				zMotor.Disable();
+				Serial1.print("OK\r\n");
+				return 0;
+			}
 		}
 	}
-	}
+	Serial1.print("ERROR\r\n");
 	return 1;
 }
 
