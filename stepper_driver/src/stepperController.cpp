@@ -5,8 +5,8 @@
 
 StepperController* StepperController::motors[STEPPER_COUNT];
 
-StepperController::StepperController(Stepper& motor, endSwitch& startSwitch, endSwitch& endSwitch)
-    : motor(motor), start(startSwitch), end(endSwitch) { };
+StepperController::StepperController(Stepper& motor, EndSwitch& startSwitch, EndSwitch& endSwitch)
+    : motor(motor), start(startSwitch), end(endSwitch), axisData(start, end, motor), stateMachine(axisData) { };
 
 StepperController::~StepperController(){
 
@@ -34,25 +34,29 @@ StepperController::direction_t StepperController::deltaToDirection(int delta){
 
 
 void StepperController::home(void) {
-    homingState = 0;
-    homingOvershootCounter = 0;
-    fWiggle = 0;
-    bWiggle = 0;
-    wiggle = 0;
-    currentMode = mode::homing;
+    // homingState = 0;
+    // homingOvershootCounter = 0;
+    // fWiggle = 0;
+    // bWiggle = 0;
+    // wiggle = 0;
+    // currentMode = mode::homing;
+    stateMachine.home();
 }
 
 void StepperController::setTarget (int x) {
-    targetPos = x;
-    currentMode = mode::target;
-    targetState = T_START;
+    // targetPos = x;
+    // currentMode = mode::target;
+    // targetState = T_START;
+    stateMachine.target(x);
 }
 
 void StepperController::tick(){
     start.update();
     end.update();
     updateTimers();
+    // TODO: replace this with StepperStateMachine
     //updateStepper();
+    /*
     if(currentMode == mode::target) {
         if(targetedMove()){
             currentMode = defaultMode;
@@ -67,9 +71,10 @@ void StepperController::tick(){
         direction = direction_t::STEPPER_PAUSE;
     } else if(currentMode == mode::disabled) {
         direction = direction_t::STEPPER_DISABLED;
-    }
+    }*/
+    stateMachine.tick();
 }
-
+/*
 // this is essentially a state machine with the advantage
 // of transitions happening on the same iteration
 bool StepperController::homingMove(){
@@ -204,17 +209,17 @@ bool StepperController::targetedMove(){
     direction = direction_t::STEPPER_PAUSE;
     return true;
 }
-
+*/
 void StepperController::updateStepper(){
     //if (isDelayed()) return;
 
-    if(direction==StepperController::direction_t::STEPPER_PAUSE) {
+    if(axisData.direction==AxisData::directionE::PAUSE) {
         motor.lock();
-    } else if (direction == direction_t::STEPPER_UP) {
+    } else if (axisData.direction==AxisData::directionE::UP) {
         motor.forward();
-    } else if (direction == direction_t::STEPPER_DOWN) {
+    } else if (axisData.direction==AxisData::directionE::DOWN) {
         motor.backward();
-    } else if (direction == direction_t::STEPPER_DISABLED) {
+    } else if (axisData.direction==AxisData::directionE::DISABLED) {
         motor.unlock();
     }
 }
@@ -236,25 +241,24 @@ bool StepperController::setDelay(const char *a)
 }
 
 void StepperController::Enable() {
-    currentMode = mode::idle;
-    direction = direction_t::STEPPER_PAUSE;
+    stateMachine.idle();
     motor.lock();
 }
 
 void StepperController::Disable() {
-    currentMode = mode::disabled;
-    direction = direction_t::STEPPER_DISABLED;
+    stateMachine.disable();
     motor.unlock();
 }
 
 bool StepperController::isEnabled(void) const {
-    return currentMode != mode::disabled;
+    return getMode() != stepperState::StepperStateMachine::mode::disabled;
 }
 
 void StepperController::reset(void) {
-    currentMode = mode::disabled;
-    direction_change_delay = 0;
-    direction = direction_t::STEPPER_DISABLED;
+    axisData.defaultMode = AxisData::mode::disabled;
+    axisData.nextMode = AxisData::mode::disabled;
+    axisData.step_delay_milliseconds = 0;
+    axisData.direction = AxisData::directionE::DISABLED;
     motor.reset();
     targetState = T_START;
     homingState = 0;
@@ -271,16 +275,16 @@ void StepperController::reset(void) {
 
 StepperController StepperController::xMotor(
     Stepper::xStepper,
-    endSwitch::Xlow,
-    endSwitch::Xhigh
+    EndSwitch::Xlow,
+    EndSwitch::Xhigh
 );
 StepperController StepperController::yMotor(
     Stepper::yStepper,
-    endSwitch::Ylow,
-    endSwitch::Yhigh
+    EndSwitch::Ylow,
+    EndSwitch::Yhigh
 );
 StepperController StepperController::zMotor(
     Stepper::zStepper,
-    endSwitch::Zlow,
-    endSwitch::Zhigh
+    EndSwitch::Zlow,
+    EndSwitch::Zhigh
 );

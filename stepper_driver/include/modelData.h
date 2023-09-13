@@ -1,4 +1,9 @@
-
+/**
+ * @file modelData.h
+ * @brief Contains the model data
+ * @details This file contains the model data. 
+ * It is used to identify the device.
+*/
 #ifndef MANUFACTURER
 #define MANUFACTURER "LU KFI"
 #endif

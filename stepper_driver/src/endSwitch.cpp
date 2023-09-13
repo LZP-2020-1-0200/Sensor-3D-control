@@ -1,7 +1,7 @@
 
 #include "endSwitch.h"
 
-endSwitch::endSwitch(
+EndSwitch::EndSwitch(
 	volatile uint8_t* pullupPort, 
 	int pullpin, 
 	volatile uint8_t* dataDirRegister, 
@@ -23,24 +23,24 @@ endSwitch::endSwitch(
 	sei();
 }; 
 
-void endSwitch::update() {
+void EndSwitch::update() {
 	triggered = (1 & ((*pinreg)>>pin));
 }
 
-bool endSwitch::getState() {
+bool EndSwitch::getState() const {
 	return triggered;
 };
 
 void switchUpdate(){
-	endSwitch::Zlow.update();
-	endSwitch::Zhigh.update();
-	endSwitch::Ylow.update();
-	endSwitch::Yhigh.update();
-	endSwitch::Xlow.update();
-	endSwitch::Xhigh.update();
+	EndSwitch::Zlow.update();
+	EndSwitch::Zhigh.update();
+	EndSwitch::Ylow.update();
+	EndSwitch::Yhigh.update();
+	EndSwitch::Xlow.update();
+	EndSwitch::Xhigh.update();
 }
 
-void endSwitch::reset(){
+void EndSwitch::reset(){
 	triggered=false;
 }
 
@@ -53,11 +53,11 @@ void endSwitch::reset(){
   &PIN ## port,\
   PIN ## port ## pin
 
-endSwitch endSwitch::Xlow{SWITCH_SETUP(B,2)};
-endSwitch endSwitch::Xhigh{SWITCH_SETUP(B,1)};
-endSwitch endSwitch::Ylow{SWITCH_SETUP(D,6)};
-endSwitch endSwitch::Yhigh{SWITCH_SETUP(B,3)};
-endSwitch endSwitch::Zlow{SWITCH_SETUP(F,1)};
-endSwitch endSwitch::Zhigh{SWITCH_SETUP(F,0)};
+EndSwitch EndSwitch::Xlow{SWITCH_SETUP(B,2)};
+EndSwitch EndSwitch::Xhigh{SWITCH_SETUP(B,1)};
+EndSwitch EndSwitch::Ylow{SWITCH_SETUP(D,6)};
+EndSwitch EndSwitch::Yhigh{SWITCH_SETUP(B,3)};
+EndSwitch EndSwitch::Zlow{SWITCH_SETUP(F,1)};
+EndSwitch EndSwitch::Zhigh{SWITCH_SETUP(F,0)};
 
 #undef SWITCH_SETUP

@@ -8,14 +8,14 @@ extern StepperController& zMotor;
 
 extern scpi::Command motorStateDefaultCMD;
 
-int modeToInt(StepperController::mode m) {
-	if(m==StepperController::mode::disabled) {
+int modeToInt(stepperState::StepperStateMachine::mode m) {
+	if(m==stepperState::StepperStateMachine::mode::disabled) {
 		return 0;
-	} else if(m==StepperController::mode::idle) {
+	} else if(m==stepperState::StepperStateMachine::mode::idle) {
 		return 1;
-	} else if(m==StepperController::mode::homing) {
+	} else if(m==stepperState::StepperStateMachine::mode::homing) {
 		return 2;
-	} else if(m==StepperController::mode::target) {
+	} else if(m==stepperState::StepperStateMachine::mode::target) {
 		return 3;
 	}
 	Serial.print("Invalid mode!\r\n");

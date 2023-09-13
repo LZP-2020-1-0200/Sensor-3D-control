@@ -1,5 +1,13 @@
 #ifndef VECTOR_H
 #define VECTOR_H
+
+/**
+ * @class Vector
+ * @brief A class that represents a 3D vector
+ * @details This class represents a 3D vector with integer coordinates.
+ * It supports basic operations such as addition, subtraction, multiplication and division by a scalar,
+ * as well as addition and subtraction by vectors and the dot product and the cross product.
+*/
 class Vector{
 public:
 	int x;
