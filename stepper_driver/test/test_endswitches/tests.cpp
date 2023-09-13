@@ -15,7 +15,7 @@ void switchConstructorTest(void){
 	uint8_t ddrpin = 7;
 	uint8_t pin = 2;
 	uint8_t pinpin = 0;
-	endSwitch sw(&port, portpin, &ddr, ddrpin, &pin, pinpin);
+	EndSwitch sw(&port, portpin, &ddr, ddrpin, &pin, pinpin);
 	TEST_ASSERT_EQUAL_MESSAGE(0b00101100, port, "port match");
 	TEST_ASSERT_EQUAL_MESSAGE(0b01000100, ddr, "DDR match");
 	TEST_ASSERT_EQUAL_MESSAGE(2, pin, "pin match");
@@ -28,7 +28,7 @@ void switchReadTest(void){
 	uint8_t ddrpin = 7;
 	uint8_t pin = 2;
 	uint8_t pinpin = 0;
-	endSwitch sw(&port, portpin, &ddr, ddrpin, &pin, pinpin);
+	EndSwitch sw(&port, portpin, &ddr, ddrpin, &pin, pinpin);
 	sw.update();
 	TEST_ASSERT_FALSE_MESSAGE(sw.getState(), "1st read");
 	pin |= 1;
