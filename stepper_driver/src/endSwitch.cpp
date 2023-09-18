@@ -7,13 +7,15 @@ endSwitch::endSwitch(
 	volatile uint8_t* dataDirRegister, 
 	int dataDirPin, 
 	volatile uint8_t* pinreg, 
-	int pin):
+	int pin,
+	const char* name):
 	pullupPort(pullupPort),  
 	pullpin(pullpin), 
 	dataDirRegister(dataDirRegister), 
 	dataDirPin(dataDirPin),
 	pinreg(pinreg), 
-	pin(pin) {
+	pin(pin),
+	name(name) {
 	
 	cli();
 	// configure switch pin to input mode
@@ -24,7 +26,20 @@ endSwitch::endSwitch(
 }; 
 
 void endSwitch::update() {
+	lastState = triggered;
 	triggered = (1 & ((*pinreg)>>pin));
+	if (triggered != lastState) {
+		edge = triggered ? 1 : -1;
+	}
+}
+
+void endSwitch::printEdge() {
+	if (edge != 0) {
+		Serial.print(name);
+		Serial.print(": ");
+		Serial.println((edge==1)? "triggered" : "untriggered");
+		edge = 0;
+	}
 }
 
 bool endSwitch::getState() {
@@ -53,11 +68,11 @@ void endSwitch::reset(){
   &PIN ## port,\
   PIN ## port ## pin
 
-endSwitch endSwitch::Xlow{SWITCH_SETUP(B,2)};
-endSwitch endSwitch::Xhigh{SWITCH_SETUP(B,1)};
-endSwitch endSwitch::Ylow{SWITCH_SETUP(D,6)};
-endSwitch endSwitch::Yhigh{SWITCH_SETUP(B,3)};
-endSwitch endSwitch::Zlow{SWITCH_SETUP(F,1)};
-endSwitch endSwitch::Zhigh{SWITCH_SETUP(F,0)};
+endSwitch endSwitch::Xlow{SWITCH_SETUP(B,2), "Xlow"};
+endSwitch endSwitch::Xhigh{SWITCH_SETUP(B,1), "Xhigh"};
+endSwitch endSwitch::Ylow{SWITCH_SETUP(D,6), "Ylow"};
+endSwitch endSwitch::Yhigh{SWITCH_SETUP(B,3), "Yhigh"};
+endSwitch endSwitch::Zlow{SWITCH_SETUP(F,1), "Zlow"};
+endSwitch endSwitch::Zhigh{SWITCH_SETUP(F,0), "Zhigh"};
 
 #undef SWITCH_SETUP

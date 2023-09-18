@@ -3,11 +3,16 @@
 #define REPORTER_H
 #pragma once
 #include <Arduino.h>
-#define ERROR_MESSAGE_MAX_LENGTH 300
-extern bool errorUnreported;
 
-void reportError(const char* msg);
+enum class ErrorSeverity {
+	INFO,
+	WARNING,
+	ERROR,
+	FATAL
+};
 
-extern char errorMsg[ERROR_MESSAGE_MAX_LENGTH];
+void report(const __FlashStringHelper* msg, ErrorSeverity severity);
+void report(const char* msg, ErrorSeverity severity);
+
 
 #endif

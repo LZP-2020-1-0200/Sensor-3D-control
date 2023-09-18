@@ -16,6 +16,7 @@ public:
         target,
         homing,
         idle,
+        raw,
         disabled
     };
 private:
@@ -73,7 +74,13 @@ public:
      *
      * Enables the stepper if it is disabled
      */
-    void home(void);
+    void setHome(void);
+
+    /**
+     * Move the stepper to the target position without accounting for
+     * wiggle room
+    */
+    void setTargetRaw(int);
 
     // Unlocks the stepper for power saving
     void Disable(void);
@@ -108,16 +115,25 @@ private:
         T_OVERSHOOT,
         T_APPROACH
     };
-    Tstate targetState=T_START;
-    int targetPos = 0;
+    struct {
+        Tstate targetState = T_START;
+        int targetPos = 0;
+    } targetModeData;
     bool targetedMove();
 
-    int homingState = 0;
-    unsigned int homingOvershootCounter = 0;
-    int fWiggle = 0;
-    int bWiggle = 0;
-    int wiggle = 0;
+    struct {
+        int homingState = 0;
+        unsigned int homingOvershootCounter = 0;
+        int fWiggle = 0;
+        int bWiggle = 0;
+        int wiggle = 0;
+    } homeModeData;
     bool homingMove();
+
+    struct {
+        int targetPos = 0;
+    } rawModeData;
+    bool rawMove();
     
     void updateStepper();
     void updateTimers();

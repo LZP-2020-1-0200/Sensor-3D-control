@@ -11,9 +11,9 @@ extern StepperController& zMotor;
 
 scpi::Command homeCMD{
   [](int argc, char** argv){
-    xMotor.home();
-    yMotor.home();
-    zMotor.home();
+    xMotor.setHome();
+    yMotor.setHome();
+    zMotor.setHome();
     Serial1.print("OK\r\n");
     return 0;
   }

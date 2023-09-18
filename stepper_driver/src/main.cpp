@@ -39,6 +39,12 @@ void setup()
 void loop()
 {
   inputHandler.update();
+  endSwitch::Xlow.printEdge();
+  endSwitch::Xhigh.printEdge();
+  endSwitch::Ylow.printEdge();
+  endSwitch::Yhigh.printEdge();
+  endSwitch::Zlow.printEdge();
+  endSwitch::Zhigh.printEdge();
 }
 
 #endif

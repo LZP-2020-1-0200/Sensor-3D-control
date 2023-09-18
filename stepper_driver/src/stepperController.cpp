@@ -33,19 +33,24 @@ StepperController::direction_t StepperController::deltaToDirection(int delta){
 
 
 
-void StepperController::home(void) {
-    homingState = 0;
-    homingOvershootCounter = 0;
-    fWiggle = 0;
-    bWiggle = 0;
-    wiggle = 0;
+void StepperController::setHome(void) {
+    homeModeData.homingState = 0;
+    homeModeData.homingOvershootCounter = 0;
+    homeModeData.fWiggle = 0;
+    homeModeData.bWiggle = 0;
+    homeModeData.wiggle = 0;
     currentMode = mode::homing;
 }
 
 void StepperController::setTarget (int x) {
-    targetPos = x;
+    targetModeData.targetPos = x;
+    targetModeData.targetState = T_START;
     currentMode = mode::target;
-    targetState = T_START;
+}
+
+void StepperController::setTargetRaw(int target) {
+    rawModeData.targetPos = target;
+    currentMode = mode::raw;
 }
 
 void StepperController::tick(){
@@ -67,15 +72,40 @@ void StepperController::tick(){
         direction = direction_t::STEPPER_PAUSE;
     } else if(currentMode == mode::disabled) {
         direction = direction_t::STEPPER_DISABLED;
+    } else if (currentMode == mode::raw) {
+        if(rawMove()) {
+            currentMode = defaultMode;
+            Serial.print("reached.\r\n");
+        }
     }
+}
+
+bool StepperController::rawMove() {
+    if (motor.getPosition() < rawModeData.targetPos) {
+        if(end.getState()) {
+            direction = direction_t::STEPPER_DISABLED;
+            return true;
+        }
+        direction = direction_t::STEPPER_UP;
+        return false;
+    } else if (motor.getPosition() > rawModeData.targetPos) {
+        if(start.getState()) {
+            direction = direction_t::STEPPER_DISABLED;
+            return true;
+        }
+        direction = direction_t::STEPPER_DOWN;
+        return false;
+    }
+    direction = direction_t::STEPPER_DISABLED;
+    return true;
 }
 
 // this is essentially a state machine with the advantage
 // of transitions happening on the same iteration
 bool StepperController::homingMove(){
-    Serial.print(homingState, DEC);
-    Serial.print("\n");
-    switch (homingState)
+    //Serial.print(homeModeData.homingState, DEC);
+    //Serial.print("\n");
+    switch (homeModeData.homingState)
     {
         // move off of limit switch
         case 0:
@@ -83,17 +113,17 @@ bool StepperController::homingMove(){
             direction = direction_t::STEPPER_UP;
             return false;
         }
-        homingOvershootCounter = 0;
-        homingState++;
+        homeModeData.homingOvershootCounter = 0;
+        homeModeData.homingState++;
 
         // overshoot
         case 1:
-        if(homingOvershootCounter<1000*step_delay_milliseconds){
-            homingOvershootCounter++;
+        if(homeModeData.homingOvershootCounter<1000*step_delay_milliseconds){
+            homeModeData.homingOvershootCounter++;
             direction = direction_t::STEPPER_UP;
             return false;
         }
-        homingState++;
+        homeModeData.homingState++;
 
         // approach switch
         case 2:
@@ -101,17 +131,17 @@ bool StepperController::homingMove(){
             direction = direction_t::STEPPER_DOWN;
             return false;
         }
-        homingOvershootCounter = 0;
-        homingState++;
+        homeModeData.homingOvershootCounter = 0;
+        homeModeData.homingState++;
 
         //small overshoot
         case 3:
-        if(homingOvershootCounter<50*step_delay_milliseconds){
-            homingOvershootCounter++;
+        if(homeModeData.homingOvershootCounter<50*step_delay_milliseconds){
+            homeModeData.homingOvershootCounter++;
             direction = direction_t::STEPPER_DOWN;
             return false;
         }
-        homingState++;
+        homeModeData.homingState++;
 
         // overshoot a bit because the switch may release because
         // of the screw releasing pressure on the switch
@@ -120,39 +150,39 @@ bool StepperController::homingMove(){
         case 4:
         if (start.getState()) {
             direction = direction_t::STEPPER_UP;
-            fWiggle++;
+            homeModeData.fWiggle++;
             return false;
         }
-        homingOvershootCounter = 0;
-        homingState++;
+        homeModeData.homingOvershootCounter = 0;
+        homeModeData.homingState++;
 
         // overshoot
         case 5:
-        if(homingOvershootCounter<50*step_delay_milliseconds){
-            homingOvershootCounter++;
+        if(homeModeData.homingOvershootCounter<50*step_delay_milliseconds){
+            homeModeData.homingOvershootCounter++;
             direction = direction_t::STEPPER_UP;
             return false;
         }
-        homingState++;
+        homeModeData.homingState++;
 
 
         // return to switch to set (0,0) and count down wiggle steps
         case 6:
         if (!start.getState()) {
             direction = direction_t::STEPPER_DOWN;
-            bWiggle++;
+            homeModeData.bWiggle++;
             return false;
         }
-        wiggle = (bWiggle>fWiggle) ? bWiggle : fWiggle;
-        wiggle = wiggle/step_delay_milliseconds;
+        homeModeData.wiggle = (homeModeData.bWiggle>homeModeData.fWiggle) ? homeModeData.bWiggle : homeModeData.fWiggle;
+        homeModeData.wiggle = homeModeData.wiggle/step_delay_milliseconds;
         motor.resetPosition();
         direction = direction_t::STEPPER_PAUSE;
-        homingState++;
+        homeModeData.homingState++;
         Serial.print("bWiggle: ");
-        Serial.print(bWiggle/step_delay_milliseconds, DEC);
+        Serial.print(homeModeData.bWiggle/step_delay_milliseconds, DEC);
         Serial.print("\r\n");
         Serial.print("fWiggle: ");
-        Serial.print(fWiggle/step_delay_milliseconds, DEC);
+        Serial.print(homeModeData.fWiggle/step_delay_milliseconds, DEC);
         
     }
     return true;
@@ -160,39 +190,40 @@ bool StepperController::homingMove(){
 
 // updates the steppers
 bool StepperController::targetedMove(){
+    
     Serial.print("targetPos: ");
-    Serial.print(targetPos, DEC);
+    Serial.print(targetModeData.targetPos, DEC);
     Serial.print("\r\n");
     Serial.print("currentPos: ");
     Serial.print(motor.getPosition(), DEC);
     Serial.print("\r\n");
-    switch (targetState)
+    switch (targetModeData.targetState)
     {
         case T_START:
         Serial.print("start\r\n");
         
-        if (motor.getPosition() > targetPos) {
-            targetState = T_APPROACH;
+        if (motor.getPosition() > targetModeData.targetPos) {
+            targetModeData.targetState = T_APPROACH;
             targetedMove();
             return false;
         }
-        targetState = T_OVERSHOOT;
+        targetModeData.targetState = T_OVERSHOOT;
         case T_OVERSHOOT:
         Serial.write("overshoot\r\n");
-        if (targetPos > motor.getPosition() - (wiggle*4)/3) {
+        if (targetModeData.targetPos > motor.getPosition() - (homeModeData.wiggle*4)/3) {
             if (end.getState()) {
-                reportError("End switch reached before target");
+                //reportError("End switch reached before target");
                 return true;
             }
             direction = direction_t::STEPPER_UP;
             return false;
         }
-        targetState = T_APPROACH;
+        targetModeData.targetState = T_APPROACH;
         case T_APPROACH:
         Serial.write("approach\r\n");
-        if (targetPos < motor.getPosition()) {
+        if (targetModeData.targetPos < motor.getPosition()) {
             if (start.getState()) {
-                reportError("End switch reached before target");
+                //reportError("End switch reached before target");
                 direction = direction_t::STEPPER_PAUSE;
                 return true;
                 
@@ -256,13 +287,13 @@ void StepperController::reset(void) {
     direction_change_delay = 0;
     direction = direction_t::STEPPER_DISABLED;
     motor.reset();
-    targetState = T_START;
-    homingState = 0;
-    homingOvershootCounter = 0;
-    wiggle = 0;
-    fWiggle = 0;
-    bWiggle = 0;
-    targetPos = 0;
+    targetModeData.targetState = T_START;
+    targetModeData.targetPos = 0;
+    homeModeData.homingState = 0;
+    homeModeData.homingOvershootCounter = 0;
+    homeModeData.wiggle = 0;
+    homeModeData.fWiggle = 0;
+    homeModeData.bWiggle = 0;
     step_delay_milliseconds = 0;
     motor.unlock();
     end.reset();

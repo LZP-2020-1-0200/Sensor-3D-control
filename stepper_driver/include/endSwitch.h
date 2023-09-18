@@ -22,8 +22,22 @@ class endSwitch{
 	int pin;
 	//* read-only value for the last switch state
 	bool triggered=false;
+	/**
+	 * @brief last known state of the switch
+	*/
+	bool lastState=false;
+
+	/**
+	 * @brief falling/rising edge detection
+	*/
+	int edge=0;
+
+	/**
+	 * @brief Name of the switch
+	*/
+	const char* name;
 public:
-	endSwitch(volatile uint8_t*, int, volatile uint8_t*, int, volatile uint8_t*, int);
+	endSwitch(volatile uint8_t*, int, volatile uint8_t*, int, volatile uint8_t*, int, const char*);
 	//* fetches the latest state of the switch
 	void update();
 	//* returns last known switch state
@@ -31,6 +45,11 @@ public:
 
 	//* resets the switch
 	void reset();
+
+	/**
+	 * @brief Print end switch edge if there is one
+	*/
+	void printEdge();
 
 	static endSwitch Zlow;
 	static endSwitch Zhigh;
