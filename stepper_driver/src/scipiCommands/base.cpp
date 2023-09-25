@@ -42,7 +42,7 @@ static void getHelp(void) {
 		"-\tRAW [X|Y|Z] {coordinate}\n"
 		"Moves all motors to the specified coordinate. (moves without compensating for movement)\n\n"
 		"-\tHOME\n"
-		"Homes all motors.\n\r\n"
+		"Homes all motors.\n\r"
 		));
 }
 

@@ -17,6 +17,8 @@ int modeToInt(StepperController::mode m) {
 		return 2;
 	} else if(m==StepperController::mode::target) {
 		return 3;
+	} else if(m==StepperController::mode::raw){
+		return 4;
 	}
 	Serial.print("Invalid mode!\r\n");
 	// Should never happen
