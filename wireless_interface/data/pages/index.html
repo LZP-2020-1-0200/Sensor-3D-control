@@ -3,6 +3,7 @@
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
 	<title>MAMI</title>
 </head>
 <body>
@@ -13,10 +14,31 @@
 		<input type="submit" value="Submit">
 	</form>
 	<p>Response:</p>
+	<div id="loader"></div>
 	<pre id="response"></pre>
+	<p>Current location</p>
+	<pre id="location"></pre>
 	<script>
-		document.getElementById("commandForm").addEventListener("submit", function(event) {
+		var responseLock = false;
+
+		async function acquireLock() {
+			while (responseLock) {
+				await new Promise(r => setTimeout(r, 100));
+			}
+			responseLock = true;
+		}
+
+		async function releaseLock() {
+			responseLock = false;
+		}
+
+		document.getElementById("commandForm").addEventListener("submit", async function(event) {
 			event.preventDefault();
+			document.getElementById("loader").innerHTML = 
+			`<div class="spinner-border text-primary" role="status">
+				<span class="visually-hidden">Loading...</span>
+			</div>`;
+			await acquireLock();
 			var command = document.getElementById("command").value+"\r\n";
 			var url = "/serial?data=" + btoa(command);
 			var request = new XMLHttpRequest();
@@ -26,9 +48,28 @@
 			request.onreadystatechange = function() {
 				if (this.readyState == 4 && this.status == 200) {
 					document.getElementById("response").innerHTML = this.responseText;
+					document.getElementById("loader").innerHTML = "";
+					releaseLock();
 				}
 			};
 		});
+		async function getLocation() {
+			await acquireLock();
+			var command = "MOTOR?\r\n";
+			var url = "/serial?data=" + btoa(command);
+			var request = new XMLHttpRequest();
+			request.open("GET", url, true);
+			request.timeout = 10000;
+			request.send();
+			request.onreadystatechange = function() {
+				if (this.readyState == 4 && this.status == 200) {
+					document.getElementById("location").innerHTML = this.responseText;
+					releaseLock();
+				}
+			};
+			setTimeout(getLocation, 1000);
+		}
+		getLocation();
 	</script>
 </body>
 </html>

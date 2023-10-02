@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+	<title>Document</title>
+	<style>
+		#logData {
+			height: 100vh;
+			overflow-y: scroll;
+		}
+	</style>
+</head>
+<body onload="load()">
+	<div id="logData">
+
+	</div>
+	<script>
+		let ws;
+		function tryConnect() {
+			ws = new WebSocket("ws://esp8266.local/ws/log");
+			ws.onopen = () => {
+				console.log("Connected");
+			}
+			ws.onmessage = (event) => {
+				console.log(event);
+				const text = event.data;
+				const logData = document.getElementById("logData");
+				const p = document.createElement("p");
+				p.innerHTML = text;
+				logData.appendChild(p);
+			}
+			ws.onerror = (event) => {
+				console.log("Error: " + event.data);
+				setTimeout(tryConnect, 1000);
+			}
+			ws.onclose = () => {
+				console.log("Disconnected");
+				setTimeout(tryConnect,1000);
+			}
+			console.log("Loaded");
+		}
+		function load() {
+			tryConnect();
+		}
+	</script>
+</body>
+</html>

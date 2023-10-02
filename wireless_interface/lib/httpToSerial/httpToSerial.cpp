@@ -45,15 +45,19 @@ HttpToSerial::HttpToSerial(
 	server(httpPort),
 	access_user(access_user),
 	access_password(access_password),
+	webSocketLogServer(),
 	routes(routes),
 	routeCount(routeCount) {
 	}
 
 HttpToSerial::~HttpToSerial() {
 	server.stop();
+	webSocketLogServer.close();
 }
 
 void HttpToSerial::log(const String& message) {
+	//Serial.println(message);
+	webSocketLogServer.broadcastTXT(message.c_str(), message.length());
 	auto file = LittleFS.open("/log.txt", "a");
 	file.print(message);
 	file.close();
@@ -63,46 +67,104 @@ void HttpToSerial::log(const String& message) {
 	logBuffer += message;
 }
 
+std::function<void(uint8, WStype_t, uint8_t*, size_t)> HttpToSerial::webSocketLogEvent() {
+	return [this](uint8 num, WStype_t type, uint8_t * payload, size_t length) {
+		switch (type)
+		{
+		case WStype_CONNECTED:
+			log("Websocket log client connected\r\n");
+			break;
+		case WStype_TEXT:
+			{
+				String message = String((char*)payload);
+				log("Websocket log message: " + message + "\r\n");
+			}
+			break;
+		case WStype_DISCONNECTED:
+			log("Websocket log client disconnected\r\n");
+			break;
+		default:
+			break;
+		}
+	};
+}
+
+std::function<void(uint8, WStype_t, uint8_t*, size_t)> HttpToSerial::webSocketSerialEvent() {
+	return [this](uint8 num, WStype_t type, uint8_t* payload, size_t length) {
+		switch (type)
+		{
+		case WStype_CONNECTED:
+			log("Websocket serial client connected\r\n");
+			break;
+		case WStype_TEXT:
+			{
+				String message = "";
+				message.concat((char*)payload, length);
+				log("Websocket serial message: " + message + "\r\n");
+				serial.print(message);
+				serial.flush();
+				String response = serial.readStringUntil('\r');
+				log("Serial response: " + response + "\r\n");
+				webSocketSerialServer.sendTXT(num, response);
+			}
+			break;
+		case WStype_DISCONNECTED:
+			log("Websocket serial client disconnected\r\n");
+			break;
+		default:
+			break;
+		}
+	};
+}
+
 void HttpToSerial::start() {
 	serial.setTimeout(3000);
 	serial.begin(serialBaud);
 	serial.readString();
 	if (MDNS.begin("esp8266")) {              // Start the mDNS responder for esp8266.local
-		//serial.println("mDNS responder started");
+		log("mDNS responder started\r\n");
 	} else {
-		//serial.println("Error setting up MDNS responder!");
+		log("Error setting up MDNS responder!\r\n");
 	}
-	//serial.println("Hello World!");
-	//serial.flush();
+
+	server.addHook(webSocketLogServer.hookForWebserver("/ws/log", webSocketLogEvent()));
+	server.addHook(webSocketSerialServer.hookForWebserver("/ws/serial", webSocketSerialEvent()));
 
 	// Route for root / web page
-	server.on("/", HTTP_GET, [this]() {
+	server.on("/", HTTPMethod::HTTP_GET, [this]() {
 		if(!isAuthorized()) {
+			server.requestAuthentication();
 			return;
 		}
 		//serial.println("HTTP request received");
-
+		log("HTTP default route request received\r\n");
 		File page = LittleFS.open("/pages/index.html", "r");
 		server.send(200, "text/html", page);
+		
+		//page.close();
 	});
 	
 	// send a custom command to the serial device
-	server.on("/serial", HTTP_GET, [this]() {
+	server.on("/serial", HTTPMethod::HTTP_GET, [this]() {
+		log("HTTP serial command request received\r\n");
 		if(!isAuthorized()) {
+			server.requestAuthentication();
 			return;
 		}
-		serial.print("\r\n");
-		serial.flush();
-		serial.readString();
+		
 		auto serialData = server.arg("data");
 		String decoded = b64_decode(serialData);
+		log("Serial command: " + decoded + "\r\n");
 		serial.print(decoded+"\r\n");
 		serial.flush();
+		log("Command sent. Waiting for response\r\n");
 		String response = serial.readStringUntil('\r');
+		log("Serial command: " + decoded + " --> " + response + "\r\n");
 		server.send(200, "text/plain", response);
 	});
-	server.on("/log", HTTP_GET, [this]() {
+	server.on("/log", HTTPMethod::HTTP_GET, [this]() {
 		if(!isAuthorized()) {
+			server.requestAuthentication();
 			return;
 		}
 		auto file = LittleFS.open("/log.txt", "r");
@@ -110,12 +172,22 @@ void HttpToSerial::start() {
 		file.close();
 		logBuffer.clear();
 	});
+
+	server.on("/livelog", HTTPMethod::HTTP_GET, [this]() {
+		if(!isAuthorized()) {
+			server.requestAuthentication();
+			return;
+		}
+		File page = LittleFS.open("/pages/liveLog.html", "r");
+		server.send(200, "text/html", page);
+		page.close();
+	});
 	// Routes for passthrough commands
 	for(size_t j=0; j<routeCount; j++) {
 		const PassthroughRoute& route = routes[j];
 		const PassthroughRoute* const routePtr = &route;
 		log("Adding route " + String(route.path) + " " + String(route.command) + "\r\n");
-		server.on(route.path, HTTP_GET, [this, routePtr]() {
+		server.on(route.path, HTTPMethod::HTTP_GET, [this, routePtr]() {
 			const PassthroughRoute& route = *routePtr;
 			log("Executing route " + String(route.path) + " " + String(route.command) + "\r\n");
 			if(!isAuthorized()) {
@@ -169,11 +241,14 @@ void HttpToSerial::start() {
 
 void HttpToSerial::loop() {
 	server.handleClient();
+	webSocketLogServer.loop();
 	MDNS.update();
 }
 
 
 bool HttpToSerial::isAuthorized() {
+	return server.authenticate(access_user, access_password);
+	/*
 	auto authHeader = server.header("Authorization");
 	String decoded;
 	authHeader.trim();
@@ -195,4 +270,5 @@ bool HttpToSerial::isAuthorized() {
 		return false;
 	}
 	return true;
+	*/
 }

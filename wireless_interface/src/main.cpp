@@ -34,7 +34,7 @@ void setup() {
         return;
     }
     // clear console
-    Serial.println("\x1b[1;1H\x1b[3J\x1b[1J\x1b[1;1H");
+    //Serial.println("\x1b[1;1H\x1b[3J\x1b[1J\x1b[1;1H");
     File file = LittleFS.open("splash.txt", "r");
     if(!file){
         Serial.println("Failed to open file for reading");

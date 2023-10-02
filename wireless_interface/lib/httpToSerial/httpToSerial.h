@@ -3,6 +3,7 @@
 #include <ESP8266WebServer.h>
 #include <ESP8266mDNS.h>
 #include <memory>
+#include <WebSockets4WebServer.h>
 
 #pragma once
 
@@ -49,12 +50,32 @@ private:
 	const char* access_user;
 	const char* access_password;
 
+	/// @brief web socket server for sending logs
+	WebSockets4WebServer webSocketLogServer;
+
+	
+	/// @brief web socket server for receiving/sending messages
+	WebSockets4WebServer webSocketSerialServer;
+
 	/**
 	 * @brief returns true if the user is authorized
 	 * @details Responds with a 401 Unauthorized if the user is not authorized.
 	 * @todo just return false if the user is not authorized, and let the caller handle the response
 	*/
 	bool isAuthorized();
+
+	/**
+	 * @brief web socket event handler for the log server
+	 * generates a closure that can be passed to the webSocketServer function
+	*/
+	std::function<void(uint8, WStype_t, uint8_t*, size_t)> webSocketLogEvent();
+
+	/**
+	 * @brief web socket event handler for the serial server
+	 * generates a closure that can be passed to the webSocketSerialServer function
+	*/
+	std::function<void(uint8, WStype_t, uint8_t*, size_t)> webSocketSerialEvent();
+	
 	PassthroughRoute* routes;
 	size_t routeCount;
 	String logBuffer="";
