@@ -307,8 +307,8 @@ StepperController StepperController::xMotor(
 );
 StepperController StepperController::yMotor(
     Stepper::yStepper,
-    endSwitch::Ylow,
-    endSwitch::Yhigh
+    endSwitch::Yhigh,
+    endSwitch::Ylow
 );
 StepperController StepperController::zMotor(
     Stepper::zStepper,

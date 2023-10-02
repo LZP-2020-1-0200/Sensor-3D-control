@@ -83,8 +83,10 @@ void Stepper::reset(void){
     DD ## port ## pin2,\
     DD ## port ## pin3,\
     DD ## port ## pin4
-    
-Stepper Stepper::yStepper{motorData{STEPPER_SETUP(D,0,4,1,7)}};
+
+#define STEPPER_SETUP_R(port, pin1, pin2, pin3, pin4) STEPPER_SETUP(port, pin4, pin3, pin2, pin1)
+
+Stepper Stepper::yStepper{motorData{STEPPER_SETUP_R(D,0,4,1,7)}};
 
 Stepper Stepper::xStepper{motorData{STEPPER_SETUP(B,4,6,5,7)}};
 
