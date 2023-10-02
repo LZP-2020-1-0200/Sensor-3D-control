@@ -248,27 +248,4 @@ void HttpToSerial::loop() {
 
 bool HttpToSerial::isAuthorized() {
 	return server.authenticate(access_user, access_password);
-	/*
-	auto authHeader = server.header("Authorization");
-	String decoded;
-	authHeader.trim();
-	if (!authHeader.startsWith("Basic ")) {
-		//serial.println("No Authorization header");
-		server.sendHeader("WWW-Authenticate", "Basic realm=\"Secure Area\"");
-		server.send(401, "text/plain", "Authentication required");
-		return false;
-	}
-	authHeader.remove(0, 6);
-	authHeader.trim();
-	decoded = b64_decode(authHeader);
-	decoded.indexOf(":");
-	auto username = decoded.substring(0, decoded.indexOf(":"));
-	auto password = decoded.substring(decoded.indexOf(":")+1);
-	if(username != access_user || password != access_password) {
-		server.sendHeader("WWW-Authenticate", "Basic realm=\"Secure Area\"");
-		server.send(401, "text/plain", "Authentication required");
-		return false;
-	}
-	return true;
-	*/
 }
