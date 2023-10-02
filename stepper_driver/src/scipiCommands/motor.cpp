@@ -31,6 +31,11 @@ int motorFunc(int argc, char** argv) {
 		}
 		Serial1.print("OK\r\n");
 		return 0;
+	} else if(argc==4){
+		xMotor.setTarget(atoi(argv[1]));
+		yMotor.setTarget(atoi(argv[2]));
+		zMotor.setTarget(atoi(argv[3]));
+		Serial1.print("OK\r\n");
 	}
 	Serial1.print("ERROR\r\n");
 	return 1;
